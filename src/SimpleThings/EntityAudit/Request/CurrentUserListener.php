@@ -25,11 +25,11 @@ namespace SimpleThings\EntityAudit\Request;
 
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
-use Symfony\Component\Security\Core\SecurityContext;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use SimpleThings\EntityAudit\AuditConfiguration;
 
 /**
- * Inject the SecurityContext username into the AuditConfiguration as current username.
+ * Inject the current username into the AuditConfiguration.
  */
 class CurrentUserListener
 {
@@ -38,16 +38,16 @@ class CurrentUserListener
      */
     private $auditConfiguration;
     /**
-     * @var SecuritYcontext
+     * @var TokenStorageInterface
      */
-    private $securityContext;
-    
-    public function __construct(AuditConfiguration $config, SecurityContext $context = null)
+    private $tokenStorage;
+
+    public function __construct(AuditConfiguration $config, TokenStorageInterface $tokenStorage = null)
     {
         $this->auditConfiguration = $config;
-        $this->securityContext = $context;
+        $this->tokenStorage = $tokenStorage;
     }
-    
+
     /**
      * Handles access authorization.
      *
@@ -59,8 +59,8 @@ class CurrentUserListener
             return;
         }
 
-        if ($this->securityContext) {
-            $token = $this->securityContext->getToken();
+        if ($this->tokenStorage) {
+            $token = $this->tokenStorage->getToken();
             if ($token && $token->isAuthenticated()) {
                 $this->auditConfiguration->setCurrentUsername( $token->getUsername() );
             }
